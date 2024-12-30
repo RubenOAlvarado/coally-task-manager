@@ -1,11 +1,11 @@
+import TaskList from './components/TaskList'
 import { TaskProvider } from './context/TaskContext'
-import Home from './pages/Home'
 
 function App() {
   return (
     <TaskProvider>
       <div className="min-h-screen bg-gray-100">
-        <Home />
+        <TaskList />
       </div>
     </TaskProvider>
   )

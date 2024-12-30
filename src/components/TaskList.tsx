@@ -1,47 +1,49 @@
+import { useState } from "react";
 import { useTasks } from "../context/TaskContext";
-import { TaskListProps } from "../interfaces/TaskListProps";
+import TaskForm from "./TaskForm";
+import TaskItem from "./TaskItem";
+import Header from "./Header";
+import { TaskStatus } from "../enums/TaskStatus";
 
-const TaskList: React.FC<TaskListProps> = ({ onEditTask }) => {
-    const { tasks, deleteTask, completeTask } = useTasks();
+const TaskList: React.FC = () => {
+    const [isFormVisible, setIsFormVisible] = useState(false);
+    const [editingTaskId, setEditingTaskId] = useState<string | null>(null);
+    const [currentFilter, setCurrentFilter] = useState<TaskStatus>(TaskStatus.All);
+
+    const { tasks, fetchTasks } = useTasks();
+
+    const handleAddTask = () => {
+        setIsFormVisible(true);
+        setEditingTaskId(null);
+    };
+
+    const handleEditTask = (taskId: string) => {
+        setIsFormVisible(true);
+        setEditingTaskId(taskId);
+    };
+
+    const handleCloseForm = () => {
+        setIsFormVisible(false);
+        setEditingTaskId(null);
+    }
+
+    const handleFilterChange = async (filter: TaskStatus) => {
+        setCurrentFilter(filter);
+        await fetchTasks(filter === TaskStatus.All ? undefined : filter);
+    };
 
     return (
-        <div className="space-y-4">
-            {tasks.map(({ id, title, description, isCompleted, createdAt}) => (
-                <div key={id} className="p-4 bg-gray-100 rounded shadow">
-                    <h3 className="text-lg font-semibold">{title}</h3>
-                    <p className="text-sm text-gray-600">{description}</p>
-                    <p className="text-xs text-gray-500">{ (createdAt instanceof Date) ? createdAt.toLocaleDateString() : new Date(createdAt).toLocaleDateString() }</p>
-                    <div className="mt-2 flex justify-between">
-                        <button
-                            onClick={() => {
-                                console.log('Completing task:', id);
-                                completeTask(id)
-                            }}
-                            className={`px-3 py-1 rounded ${
-                                isCompleted
-                                  ? 'bg-green-500 text-white'
-                                  : 'bg-gray-300'
-                              }`}
-                        >
-                            {isCompleted ? 'Completed' : 'Mark as Completed'}
-                        </button>
-                        <div className="space-x-2">
-                            <button
-                                onClick={() => onEditTask(id)}
-                                className="px-4 py-2 bg-blue-500 text-white rounded shadow"
-                            >
-                                Edit
-                            </button>
-                            <button
-                                onClick={() => deleteTask(id)}
-                                className="px-4 py-2 bg-red-500 text-white rounded shadow"
-                            >
-                                Delete
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            ))}
+        <div className="max-w-lg mx-auto mt-10">
+            <h1 className="text-2xl font-bold text-center mb-6">Task Manager</h1>
+            <Header currentFilter={currentFilter} onFilterChange={handleFilterChange} onAddTask={handleAddTask} />
+            {isFormVisible ? (
+                <TaskForm taskId={editingTaskId || undefined} onClose={handleCloseForm} />
+                ) : (
+                    tasks.map((task) => (
+                        <TaskItem key={task.id} task={task} onEditTask={handleEditTask} />
+                    ))
+                )
+            }
         </div>
     );
 };
